@@ -1,6 +1,7 @@
-import express from 'express';
+import express, {Request, Response} from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
+import {isUri} from 'valid-url';
 
 (async () => {
 
@@ -28,7 +29,17 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
 
   /**************************************************************************** */
+  app.get("/filterimg", async (req: Request, res: Response) =>  {
+    const {image_url: imageUrl} = req.query;
+    if (!imageUrl || !isUri(imageUrl)) {
+      return res.status(400).send({auth: false, message: 'Image url is missing. If you cannot provide a valid url, then you should not be using this'});
+    }
 
+    const filteredPath = await filterImageFromURL(imageUrl);
+
+    res.sendFile(filteredPath, {}, () => deleteLocalFiles([filteredPath]));
+
+  });
   //! END @TODO1
   
   // Root Endpoint
